@@ -1,0 +1,118 @@
+# Cost Guard Pricing Table
+# This file defines pricing for models and tools.
+# Prices are per 1,000 tokens in USD.
+
+pricing:
+  currency: "USD"
+
+  # Fallback pricing for unknown models
+  fallback_input_per_1k: 1.0
+  fallback_output_per_1k: 3.0
+
+  models:
+    # OpenAI GPT-4 Series
+    "gpt-4":
+      input_per_1k: 30.00
+      output_per_1k: 60.00
+
+    "gpt-4-turbo":
+      input_per_1k: 10.00
+      output_per_1k: 30.00
+
+    "gpt-4o":
+      input_per_1k: 2.50
+      output_per_1k: 10.00
+      cached_input_per_1k: 1.25  # 50% discount for cached
+
+    "gpt-4o-mini":
+      input_per_1k: 0.15
+      output_per_1k: 0.60
+      cached_input_per_1k: 0.075
+
+    "gpt-4.1":
+      input_per_1k: 5.00
+      output_per_1k: 15.00
+
+    "gpt-4.1-mini":
+      input_per_1k: 0.40
+      output_per_1k: 1.60
+
+    # OpenAI GPT-3.5 Series
+    "gpt-3.5-turbo":
+      input_per_1k: 0.50
+      output_per_1k: 1.50
+
+    # OpenAI o1 Series (with reasoning tokens)
+    "o1-preview":
+      input_per_1k: 15.00
+      output_per_1k: 60.00
+      reasoning_per_1k: 60.00
+
+    "o1-mini":
+      input_per_1k: 3.00
+      output_per_1k: 12.00
+      reasoning_per_1k: 12.00
+
+    # Anthropic Claude Series
+    "claude-3-opus":
+      input_per_1k: 15.00
+      output_per_1k: 75.00
+
+    "claude-3-sonnet":
+      input_per_1k: 3.00
+      output_per_1k: 15.00
+
+    "claude-3-haiku":
+      input_per_1k: 0.25
+      output_per_1k: 1.25
+
+    "claude-3.5-sonnet":
+      input_per_1k: 3.00
+      output_per_1k: 15.00
+      cached_input_per_1k: 0.30  # 90% discount for cached
+
+    "claude-3.5-haiku":
+      input_per_1k: 0.80
+      output_per_1k: 4.00
+      cached_input_per_1k: 0.08
+
+    # Google Gemini Series
+    "gemini-1.5-pro":
+      input_per_1k: 3.50
+      output_per_1k: 10.50
+
+    "gemini-1.5-flash":
+      input_per_1k: 0.075
+      output_per_1k: 0.30
+
+    "gemini-2.0-flash":
+      input_per_1k: 0.10
+      output_per_1k: 0.40
+
+    # Meta Llama Series (typical hosted pricing)
+    "llama-3.1-405b":
+      input_per_1k: 5.00
+      output_per_1k: 15.00
+
+    "llama-3.1-70b":
+      input_per_1k: 0.90
+      output_per_1k: 0.90
+
+    "llama-3.1-8b":
+      input_per_1k: 0.20
+      output_per_1k: 0.20
+
+  # Tool pricing (optional - most tools have zero cost)
+  tools:
+    "web_search":
+      cost_per_call: 0.01
+
+    "code_execution":
+      cost_per_call: 0.005
+
+    "file_upload":
+      cost_per_call: 0.00
+      cost_per_input_byte: 0.000001  # $1 per MB
+
+    "image_generation":
+      cost_per_call: 0.04

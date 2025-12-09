@@ -1,0 +1,111 @@
+# Cost Guard Routing Policies
+# This file defines model routing rules for adaptive model selection.
+
+routing_policies:
+  # Default routing policy for all strands
+  - id: "default-routing"
+    match:
+      strand_id: "*"
+    default_model: "gpt-4o-mini"
+    default_fallback_model: "gpt-3.5-turbo"
+    stages:
+      - stage: "planning"
+        default_model: "gpt-4o-mini"
+        max_tokens: 2000
+        trigger_downgrade_on:
+          soft_threshold_exceeded: true
+          remaining_budget_below: 10.0
+
+      - stage: "tool_selection"
+        default_model: "gpt-4o-mini"
+        max_tokens: 1000
+        trigger_downgrade_on:
+          soft_threshold_exceeded: true
+
+      - stage: "synthesis"
+        default_model: "gpt-4o"
+        fallback_model: "gpt-4o-mini"
+        max_tokens: 4000
+        trigger_downgrade_on:
+          soft_threshold_exceeded: true
+          remaining_budget_below: 20.0
+          iteration_count_above: 5
+
+  # High-quality routing for code generation
+  - id: "codegen-routing"
+    match:
+      strand_id: "code_generator"
+    default_model: "gpt-4o"
+    stages:
+      - stage: "planning"
+        default_model: "gpt-4o"
+        fallback_model: "gpt-4o-mini"
+        max_tokens: 4000
+        trigger_downgrade_on:
+          soft_threshold_exceeded: true
+          remaining_budget_below: 25.0
+
+      - stage: "tool_selection"
+        default_model: "gpt-4o-mini"
+        max_tokens: 1500
+
+      - stage: "synthesis"
+        default_model: "gpt-4o"
+        fallback_model: "gpt-4o-mini"
+        max_tokens: 8000
+        trigger_downgrade_on:
+          soft_threshold_exceeded: true
+          remaining_budget_below: 30.0
+
+  # Cost-optimized routing for analytics
+  - id: "analytics-routing"
+    match:
+      strand_id: "analytics_assistant"
+    default_model: "gpt-4o-mini"
+    default_fallback_model: "gpt-3.5-turbo"
+    stages:
+      - stage: "planning"
+        default_model: "gpt-4o-mini"
+        max_tokens: 1500
+        trigger_downgrade_on:
+          remaining_budget_below: 5.0
+
+      - stage: "tool_selection"
+        default_model: "gpt-4o-mini"
+        fallback_model: "gpt-3.5-turbo"
+        max_tokens: 800
+        trigger_downgrade_on:
+          soft_threshold_exceeded: true
+
+      - stage: "synthesis"
+        default_model: "gpt-4o-mini"
+        fallback_model: "gpt-3.5-turbo"
+        max_tokens: 3000
+        trigger_downgrade_on:
+          soft_threshold_exceeded: true
+          iteration_count_above: 3
+
+  # Claude-based routing for specific tenant
+  - id: "claude-routing"
+    match:
+      tenant_id: "claude-tenant"
+      strand_id: "*"
+    default_model: "claude-3.5-sonnet"
+    stages:
+      - stage: "planning"
+        default_model: "claude-3.5-haiku"
+        max_tokens: 2000
+        trigger_downgrade_on:
+          remaining_budget_below: 15.0
+
+      - stage: "tool_selection"
+        default_model: "claude-3.5-haiku"
+        max_tokens: 1000
+
+      - stage: "synthesis"
+        default_model: "claude-3.5-sonnet"
+        fallback_model: "claude-3.5-haiku"
+        max_tokens: 4000
+        trigger_downgrade_on:
+          soft_threshold_exceeded: true
+          remaining_budget_below: 25.0

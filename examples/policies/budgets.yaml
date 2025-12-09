@@ -1,0 +1,93 @@
+# Cost Guard Budget Policies
+# This file defines budget limits and constraints for your Strands agents.
+
+budgets:
+  # Global default budget - applies to all tenants
+  - id: "global-default"
+    scope: "global"
+    match:
+      tenant_id: "*"
+    period: "monthly"
+    max_cost: 10000.0
+    soft_thresholds: [0.7, 0.9, 1.0]
+    hard_limit: true
+    on_soft_threshold_exceeded: "LOG_ONLY"
+    on_hard_limit_exceeded: "REJECT_NEW_RUNS"
+
+  # Tenant-level budget for production tenant
+  - id: "tenant-production"
+    scope: "tenant"
+    match:
+      tenant_id: "prod-tenant-001"
+    period: "monthly"
+    max_cost: 5000.0
+    soft_thresholds: [0.7, 0.9, 0.95]
+    hard_limit: true
+    on_soft_threshold_exceeded: "DOWNGRADE_MODEL"
+    on_hard_limit_exceeded: "REJECT_NEW_RUNS"
+    max_runs_per_period: 50000
+    max_concurrent_runs: 100
+
+  # Strand-level budget for analytics assistant
+  - id: "analytics-strand"
+    scope: "strand"
+    match:
+      tenant_id: "*"
+      strand_id: "analytics_assistant"
+    period: "daily"
+    max_cost: 50.0
+    soft_thresholds: [0.8, 0.95]
+    hard_limit: true
+    on_soft_threshold_exceeded: "DOWNGRADE_MODEL"
+    on_hard_limit_exceeded: "HALT_RUN"
+    max_runs_per_period: 1000
+    max_concurrent_runs: 50
+    constraints:
+      max_iterations_per_run: 10
+      max_tool_calls_per_run: 30
+      max_model_tokens_per_run: 50000
+
+  # Strand-level budget for code generation
+  - id: "codegen-strand"
+    scope: "strand"
+    match:
+      tenant_id: "*"
+      strand_id: "code_generator"
+    period: "daily"
+    max_cost: 100.0
+    soft_thresholds: [0.6, 0.8, 0.95]
+    hard_limit: true
+    on_soft_threshold_exceeded: "DOWNGRADE_MODEL"
+    on_hard_limit_exceeded: "HALT_RUN"
+    constraints:
+      max_iterations_per_run: 20
+      max_tool_calls_per_run: 50
+      max_model_tokens_per_run: 100000
+
+  # Workflow-level budget for complex workflows
+  - id: "complex-workflow"
+    scope: "workflow"
+    match:
+      workflow_id: "multi_step_analysis"
+    period: "daily"
+    max_cost: 25.0
+    hard_limit: true
+    on_hard_limit_exceeded: "HALT_RUN"
+    constraints:
+      max_iterations_per_run: 15
+      max_tool_calls_per_run: 40
+      max_model_tokens_per_run: 75000
+
+  # Development/testing budget with looser limits
+  - id: "dev-tenant"
+    scope: "tenant"
+    match:
+      tenant_id: "dev-*"
+    period: "daily"
+    max_cost: 100.0
+    soft_thresholds: [0.9]
+    hard_limit: false
+    on_soft_threshold_exceeded: "LOG_ONLY"
+    constraints:
+      max_iterations_per_run: 50
+      max_tool_calls_per_run: 100
