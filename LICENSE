@@ -48,7 +48,11 @@
       "Contribution" shall mean any work of authorship, including
       the original version of the Work and any modifications or additions
       to that Work or Derivative Works thereof, that is intentionally
+<<<<<<< HEAD
       submitted to the Licensor for inclusion in the Work by the copyright owner
+=======
+      submitted to Licensor for inclusion in the Work by the copyright owner
+>>>>>>> cc6a8c2e870ac8cfeed793c39adf2a6d61ed47ec
       or by an individual or Legal Entity authorized to submit on behalf of
       the copyright owner. For the purposes of this definition, "submitted"
       means any form of electronic, verbal, or written communication sent
@@ -175,7 +179,22 @@
 
    END OF TERMS AND CONDITIONS
 
+<<<<<<< HEAD
    Copyright 2024 Strands Contributors
+=======
+   APPENDIX: How to apply the Apache License to your work.
+
+      To apply the Apache License to your work, attach the following
+      boilerplate notice, with the fields enclosed by brackets "[]"
+      replaced with your own identifying information. (Don't include
+      the brackets!)  The text should be enclosed in the appropriate
+      comment syntax for the file format. We also recommend that a
+      file or class name and description of purpose be included on the
+      same "printed page" as the copyright notice for easier
+      identification within third-party archives.
+
+   Copyright [yyyy] [name of copyright owner]
+>>>>>>> cc6a8c2e870ac8cfeed793c39adf2a6d61ed47ec
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
