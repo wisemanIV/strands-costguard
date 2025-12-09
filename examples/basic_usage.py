@@ -5,10 +5,11 @@ This example demonstrates how to integrate Cost Guard into a Strands-based
 agent runtime with budget enforcement and cost tracking.
 """
 
+from strands.telemetry.config import StrandsTelemetry
+
 from strand_cost_guard import (
     CostGuard,
     CostGuardConfig,
-    OtelConfig,
     FilePolicySource,
     ModelRouter,
     ModelUsage,
@@ -18,15 +19,15 @@ from strand_cost_guard import (
 
 
 def main():
+    # Configure StrandsTelemetry first (handles all OTEL setup)
+    telemetry = StrandsTelemetry()
+    telemetry.setup_otlp_exporter(endpoint="http://localhost:4317")
+    telemetry.setup_meter(enable_otlp_exporter=True)
+
     # Initialize Cost Guard with file-based policies
+    # Cost Guard will use the global MeterProvider from StrandsTelemetry
     config = CostGuardConfig(
         policy_source=FilePolicySource(path="./policies"),
-        otel_config=OtelConfig(
-            enabled=True,
-            endpoint="http://localhost:4317",
-            service_name="my-strands-service",
-            deployment_environment="development",
-        ),
         enable_budget_enforcement=True,
         enable_routing=True,
         enable_metrics=True,
@@ -135,7 +136,7 @@ def main():
         print(f"    Utilization: {stats['utilization']:.1%}")
         print(f"    Remaining: ${stats['remaining']:.2f}")
 
-    # Shutdown (flushes metrics)
+    # Cleanup - metrics are flushed via StrandsTelemetry
     guard.shutdown()
 
 

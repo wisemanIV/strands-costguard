@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from typing import Any, Optional
 
 from strand_cost_guard.core.budget_tracker import BudgetTracker
-from strand_cost_guard.core.config import CostGuardConfig, FailureMode
+from strand_cost_guard.core.config import CostGuardConfig
 from strand_cost_guard.core.decisions import (
     AdmissionDecision,
     DecisionAction,
@@ -57,8 +57,10 @@ class CostGuard:
 
         self._budget_tracker = BudgetTracker()
 
-        if self.config.enable_metrics and self.config.otel_config.enabled:
-            self._metrics_emitter = MetricsEmitter(self.config.otel_config)
+        if self.config.enable_metrics:
+            self._metrics_emitter = MetricsEmitter(
+                include_run_id=self.config.include_run_id_in_metrics
+            )
 
     # =========================================================================
     # Lifecycle Hooks
@@ -544,6 +546,10 @@ class CostGuard:
     # =========================================================================
 
     def shutdown(self) -> None:
-        """Shutdown the Cost Guard and flush metrics."""
-        if self._metrics_emitter:
-            self._metrics_emitter.shutdown()
+        """Shutdown the Cost Guard.
+
+        Note: Metrics flushing is handled by StrandsTelemetry shutdown.
+        Call this method for any Cost Guard-specific cleanup.
+        """
+        # No-op: MeterProvider lifecycle is managed by StrandsTelemetry
+        pass

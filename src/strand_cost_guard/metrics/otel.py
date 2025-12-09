@@ -1,25 +1,33 @@
-"""OpenTelemetry metrics emission for Cost Guard."""
+"""OpenTelemetry metrics emission for Cost Guard.
+
+This module leverages the global MeterProvider configured by StrandsTelemetry
+rather than creating its own OTEL infrastructure. Users must configure
+telemetry via StrandsTelemetry before using Cost Guard metrics.
+
+Example:
+    from strands.telemetry.config import StrandsTelemetry
+
+    # Configure telemetry once at application startup
+    telemetry = StrandsTelemetry()
+    telemetry.setup_otlp_exporter()
+    telemetry.setup_meter(enable_otlp_exporter=True)
+
+    # Cost Guard will use the global meter automatically
+    guard = CostGuard(config=config)
+"""
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 from opentelemetry import metrics
-from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
-from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
-    OTLPMetricExporter as OTLPMetricExporterHTTP,
-)
-from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
-from opentelemetry.sdk.resources import Resource
 
-from strand_cost_guard.core.config import OtelConfig
 from strand_cost_guard.core.entities import RunContext, RunState
 from strand_cost_guard.core.usage import IterationUsage, ModelUsage, ToolUsage
 
 logger = logging.getLogger(__name__)
 
-# Metric names following OpenTelemetry semantic conventions
+# Metric names following OpenTelemetry semantic conventions for GenAI
 METRIC_COST_TOTAL = "genai.cost.total"
 METRIC_COST_MODEL = "genai.cost.model"
 METRIC_COST_TOOL = "genai.cost.tool"
@@ -38,72 +46,45 @@ class MetricsEmitter:
     """
     OpenTelemetry metrics emitter for Cost Guard.
 
-    Emits cost and usage metrics using the OpenTelemetry SDK, configured
-    to export via OTLP to an OTel Collector.
+    Uses the global MeterProvider configured by StrandsTelemetry to emit
+    cost and usage metrics. This ensures Cost Guard integrates seamlessly
+    with the existing Strands observability infrastructure.
+
+    Note:
+        StrandsTelemetry must be configured with meter support before
+        creating a MetricsEmitter. Call `telemetry.setup_meter()` first.
     """
 
-    config: OtelConfig
-    _meter_provider: Optional[MeterProvider] = None
-    _meter: Optional[metrics.Meter] = None
+    include_run_id: bool = False
+    _meter: Optional[metrics.Meter] = field(init=False, default=None)
 
     # Counters
-    _cost_total: Optional[metrics.Counter] = None
-    _cost_model: Optional[metrics.Counter] = None
-    _cost_tool: Optional[metrics.Counter] = None
-    _tokens_input: Optional[metrics.Counter] = None
-    _tokens_output: Optional[metrics.Counter] = None
-    _iterations: Optional[metrics.Counter] = None
-    _tool_calls: Optional[metrics.Counter] = None
-    _runs: Optional[metrics.Counter] = None
-    _downgrades: Optional[metrics.Counter] = None
-    _rejections: Optional[metrics.Counter] = None
-    _halts: Optional[metrics.Counter] = None
+    _cost_total: Optional[metrics.Counter] = field(init=False, default=None)
+    _cost_model: Optional[metrics.Counter] = field(init=False, default=None)
+    _cost_tool: Optional[metrics.Counter] = field(init=False, default=None)
+    _tokens_input: Optional[metrics.Counter] = field(init=False, default=None)
+    _tokens_output: Optional[metrics.Counter] = field(init=False, default=None)
+    _iterations: Optional[metrics.Counter] = field(init=False, default=None)
+    _tool_calls: Optional[metrics.Counter] = field(init=False, default=None)
+    _runs: Optional[metrics.Counter] = field(init=False, default=None)
+    _downgrades: Optional[metrics.Counter] = field(init=False, default=None)
+    _rejections: Optional[metrics.Counter] = field(init=False, default=None)
+    _halts: Optional[metrics.Counter] = field(init=False, default=None)
 
     def __post_init__(self) -> None:
-        """Initialize OpenTelemetry meter and instruments."""
-        if not self.config.enabled:
-            return
-
+        """Initialize meter and instruments from global MeterProvider."""
         try:
-            self._setup_meter_provider()
+            self._setup_meter()
             self._setup_instruments()
-            logger.info(
-                f"OpenTelemetry metrics initialized, exporting to {self.config.endpoint}"
-            )
+            logger.info("Cost Guard metrics initialized using global MeterProvider")
         except Exception as e:
-            logger.error(f"Failed to initialize OpenTelemetry metrics: {e}")
-
-    def _setup_meter_provider(self) -> None:
-        """Set up the OpenTelemetry meter provider with OTLP exporter."""
-        # Create resource with attributes
-        resource = Resource.create(self.config.get_resource_attributes())
-
-        # Create exporter based on configuration
-        if self.config.use_grpc:
-            exporter = OTLPMetricExporter(
-                endpoint=self.config.endpoint,
-                timeout=self.config.export_timeout_ms / 1000,
-            )
-        else:
-            exporter = OTLPMetricExporterHTTP(
-                endpoint=self.config.endpoint,
-                timeout=self.config.export_timeout_ms / 1000,
+            logger.warning(
+                f"Failed to initialize Cost Guard metrics: {e}. "
+                "Ensure StrandsTelemetry.setup_meter() was called."
             )
 
-        # Create metric reader with periodic export
-        reader = PeriodicExportingMetricReader(
-            exporter=exporter,
-            export_interval_millis=self.config.export_interval_ms,
-        )
-
-        # Create and set meter provider
-        self._meter_provider = MeterProvider(
-            resource=resource,
-            metric_readers=[reader],
-        )
-        metrics.set_meter_provider(self._meter_provider)
-
-        # Get meter
+    def _setup_meter(self) -> None:
+        """Get meter from the global MeterProvider set by StrandsTelemetry."""
         self._meter = metrics.get_meter(
             name="strand-cost-guard",
             version="0.1.0",
@@ -188,7 +169,7 @@ class MetricsEmitter:
         """Get base attributes for a metric from run context."""
         attrs = context.to_attributes()
         # Remove run_id if high cardinality is not desired
-        if not self.config.include_run_id_attribute:
+        if not self.include_run_id:
             attrs.pop("strands.run_id", None)
         return attrs
 
@@ -287,12 +268,3 @@ class MetricsEmitter:
         attrs = self._get_base_attributes(context)
         attrs["strands.reason"] = reason[:100]
         self._halts.add(1, attributes=attrs)
-
-    def shutdown(self) -> None:
-        """Shutdown the meter provider and flush metrics."""
-        if self._meter_provider:
-            try:
-                self._meter_provider.shutdown()
-                logger.info("OpenTelemetry metrics shutdown complete")
-            except Exception as e:
-                logger.error(f"Error shutting down OpenTelemetry metrics: {e}")

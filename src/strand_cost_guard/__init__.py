@@ -4,12 +4,24 @@ Strand Cost Guard - Budget enforcement and adaptive routing for Strands-based mu
 This library provides:
 - Budget enforcement at tenant, strand, workflow, and run levels
 - Adaptive model routing based on cost policies
-- OpenTelemetry-compatible metrics emission
+- OpenTelemetry-compatible metrics emission via StrandsTelemetry
 - Integration with Strands runtime lifecycle hooks
+
+Metrics Setup:
+    Cost Guard uses the global MeterProvider configured by StrandsTelemetry.
+    Configure telemetry before creating a CostGuard instance:
+
+        from strands.telemetry.config import StrandsTelemetry
+
+        telemetry = StrandsTelemetry()
+        telemetry.setup_otlp_exporter()
+        telemetry.setup_meter(enable_otlp_exporter=True)
+
+        guard = CostGuard(config=config)
 """
 
 from strand_cost_guard.core.cost_guard import CostGuard
-from strand_cost_guard.core.config import CostGuardConfig, OtelConfig
+from strand_cost_guard.core.config import CostGuardConfig
 from strand_cost_guard.core.decisions import (
     AdmissionDecision,
     IterationDecision,
@@ -29,7 +41,6 @@ __all__ = [
     # Core
     "CostGuard",
     "CostGuardConfig",
-    "OtelConfig",
     # Decisions
     "AdmissionDecision",
     "IterationDecision",

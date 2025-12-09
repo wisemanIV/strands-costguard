@@ -9,10 +9,11 @@ from dataclasses import dataclass
 from typing import Any, Optional
 import uuid
 
+from strands.telemetry.config import StrandsTelemetry
+
 from strand_cost_guard import (
     CostGuard,
     CostGuardConfig,
-    OtelConfig,
     FilePolicySource,
     ModelRouter,
     ModelUsage,
@@ -256,14 +257,18 @@ class CostGuardedAgent:
 
 def main():
     """Run the example integration."""
-    # Initialize Cost Guard
+    # Configure StrandsTelemetry first
+    # For local testing without an OTEL collector, use console exporter
+    telemetry = StrandsTelemetry()
+    telemetry.setup_console_exporter()  # Prints spans to console
+    telemetry.setup_meter(enable_console_exporter=True)  # Prints metrics to console
+
+    # Initialize Cost Guard - uses global MeterProvider from StrandsTelemetry
     config = CostGuardConfig(
         policy_source=FilePolicySource(path="./policies"),
-        otel_config=OtelConfig(
-            enabled=False,  # Disable for local testing
-        ),
         enable_budget_enforcement=True,
         enable_routing=True,
+        enable_metrics=True,
     )
 
     cost_guard = CostGuard(config=config)
@@ -299,7 +304,7 @@ def main():
     for budget_id, stats in summary.items():
         print(f"  {budget_id}: {stats['utilization']:.1%} utilized")
 
-    # Cleanup
+    # Cleanup - Cost Guard no longer manages OTEL lifecycle
     cost_guard.shutdown()
 
 
