@@ -25,6 +25,18 @@ pip install strands-costguard[valkey]
 
 ## Quick Start
 
+### Running the Examples
+
+```bash
+# Install the package in development mode
+pip install -e .
+
+# Run the basic usage example
+python examples/basic_usage.py
+```
+
+### Basic Usage
+
 ```python
 from strands_costguard import (
     CostGuard,
@@ -233,4 +245,4 @@ ruff check src/
 
 ## License
 
-MIT
+Apache-2.0
