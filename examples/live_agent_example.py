@@ -23,8 +23,8 @@ from strands.models.anthropic import AnthropicModel
 from strands_costguard import (
     CostGuard,
     CostGuardConfig,
-    ModelUsage,
     IterationUsage,
+    ModelUsage,
 )
 
 
@@ -125,9 +125,9 @@ def run_cost_guarded_agent(task: str) -> dict:
     }
 
     # === Run Start ===
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Starting run: {run_id[:8]}...")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     admission = guard.on_run_start(
         tenant_id=tenant_id,
@@ -178,7 +178,7 @@ def run_cost_guarded_agent(task: str) -> dict:
             effective_model = model_decision.effective_model
             print(f"Using model: {effective_model}")
             if model_decision.was_downgraded:
-                print(f"  (Downgraded from requested model)")
+                print("  (Downgraded from requested model)")
 
             # Make real API call
             model = AnthropicModel(
@@ -248,12 +248,14 @@ def run_cost_guarded_agent(task: str) -> dict:
         )
 
         # Print summary
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("Run Summary")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         print(f"Status: {result['status']}")
         print(f"Model calls: {result['model_calls']}")
-        print(f"Total tokens: {result['total_input_tokens']} input, {result['total_output_tokens']} output")
+        print(
+            f"Total tokens: {result['total_input_tokens']} input, {result['total_output_tokens']} output"
+        )
         print(f"Total cost: ${result['cost']:.6f}")
 
         # Budget summary
@@ -290,9 +292,9 @@ def main():
 
     result = run_cost_guarded_agent(task)
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("Example Complete!")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     if result["output"]:
         print(f"\nAgent Output:\n{result['output']}")

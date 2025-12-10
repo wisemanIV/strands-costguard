@@ -15,7 +15,9 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def get_period_boundaries(period: BudgetPeriod, reference_time: Optional[datetime] = None) -> tuple[datetime, datetime]:
+def get_period_boundaries(
+    period: BudgetPeriod, reference_time: datetime | None = None
+) -> tuple[datetime, datetime]:
     """Calculate the start and end times for a budget period."""
     now = reference_time or datetime.utcnow()
 
@@ -61,7 +63,7 @@ class BudgetState:
         return self.usage.total_cost / self.budget.max_cost
 
     @property
-    def remaining_budget(self) -> Optional[float]:
+    def remaining_budget(self) -> float | None:
         """Get remaining budget, or None if unlimited."""
         if self.budget.max_cost is None:
             return None
@@ -72,12 +74,12 @@ class BudgetState:
         """Get number of currently active runs."""
         return len(self.active_runs)
 
-    def is_period_expired(self, now: Optional[datetime] = None) -> bool:
+    def is_period_expired(self, now: datetime | None = None) -> bool:
         """Check if the current period has expired."""
         now = now or datetime.utcnow()
         return now >= self.usage.period_end
 
-    def reset_for_new_period(self, now: Optional[datetime] = None) -> None:
+    def reset_for_new_period(self, now: datetime | None = None) -> None:
         """Reset usage for a new period."""
         now = now or datetime.utcnow()
         start, end = get_period_boundaries(self.budget.period, now)
@@ -112,7 +114,9 @@ class BudgetTracker:
     _budget_states: dict[str, BudgetState] = field(default_factory=dict)
     _run_states: dict[str, RunState] = field(default_factory=dict)
 
-    def _get_scope_key(self, budget: BudgetSpec, tenant_id: str, strand_id: str, workflow_id: str) -> str:
+    def _get_scope_key(
+        self, budget: BudgetSpec, tenant_id: str, strand_id: str, workflow_id: str
+    ) -> str:
         """Generate a unique key for a budget scope."""
         if budget.scope == BudgetScope.GLOBAL:
             return f"global:{budget.id}"
@@ -242,7 +246,7 @@ class BudgetTracker:
                 if self.store:
                     self.store.increment_run_count(key, run_state.context.run_id)
 
-    def unregister_run(self, run_id: str, budgets: list[BudgetSpec]) -> Optional[RunState]:
+    def unregister_run(self, run_id: str, budgets: list[BudgetSpec]) -> RunState | None:
         """Unregister a completed run and update totals."""
         with self._lock:
             run_state = self._run_states.pop(run_id, None)
@@ -270,7 +274,7 @@ class BudgetTracker:
 
             return run_state
 
-    def get_run_state(self, run_id: str) -> Optional[RunState]:
+    def get_run_state(self, run_id: str) -> RunState | None:
         """Get the current state of a run."""
         with self._lock:
             return self._run_states.get(run_id)
@@ -278,11 +282,11 @@ class BudgetTracker:
     def update_run_cost(
         self,
         run_id: str,
-        model_name: Optional[str] = None,
+        model_name: str | None = None,
         model_cost: float = 0.0,
         input_tokens: int = 0,
         output_tokens: int = 0,
-        tool_name: Optional[str] = None,
+        tool_name: str | None = None,
         tool_cost: float = 0.0,
     ) -> None:
         """Update costs for a run (does not update period totals until run ends)."""
@@ -314,28 +318,38 @@ class BudgetTracker:
         exceeded = []
 
         for budget in budgets:
-            state = self.get_or_create_budget_state(
-                budget, tenant_id, strand_id, workflow_id
-            )
+            state = self.get_or_create_budget_state(budget, tenant_id, strand_id, workflow_id)
 
             # Check hard cost limit
             if budget.max_cost and state.utilization >= 1.0 and budget.hard_limit:
                 exceeded.append(
-                    (budget, state, f"Budget {budget.id} hard limit exceeded: {state.utilization:.1%}")
+                    (
+                        budget,
+                        state,
+                        f"Budget {budget.id} hard limit exceeded: {state.utilization:.1%}",
+                    )
                 )
                 continue
 
             # Check max runs per period
             if budget.max_runs_per_period and state.usage.total_runs >= budget.max_runs_per_period:
                 exceeded.append(
-                    (budget, state, f"Budget {budget.id} max runs exceeded: {state.usage.total_runs}/{budget.max_runs_per_period}")
+                    (
+                        budget,
+                        state,
+                        f"Budget {budget.id} max runs exceeded: {state.usage.total_runs}/{budget.max_runs_per_period}",
+                    )
                 )
                 continue
 
             # Check concurrent runs
             if budget.max_concurrent_runs and state.concurrent_runs >= budget.max_concurrent_runs:
                 exceeded.append(
-                    (budget, state, f"Budget {budget.id} max concurrent runs exceeded: {state.concurrent_runs}/{budget.max_concurrent_runs}")
+                    (
+                        budget,
+                        state,
+                        f"Budget {budget.id} max concurrent runs exceeded: {state.concurrent_runs}/{budget.max_concurrent_runs}",
+                    )
                 )
 
         return exceeded
@@ -351,9 +365,7 @@ class BudgetTracker:
         summary = {}
 
         for budget in budgets:
-            state = self.get_or_create_budget_state(
-                budget, tenant_id, strand_id, workflow_id
-            )
+            state = self.get_or_create_budget_state(budget, tenant_id, strand_id, workflow_id)
             summary[budget.id] = {
                 "scope": budget.scope.value,
                 "period": budget.period.value,

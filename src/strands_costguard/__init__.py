@@ -36,8 +36,8 @@ Persistence Setup (optional):
         guard = CostGuard(config=config)
 """
 
-from strands_costguard.core.cost_guard import CostGuard
 from strands_costguard.core.config import CostGuardConfig
+from strands_costguard.core.cost_guard import CostGuard
 from strands_costguard.core.decisions import (
     AdmissionDecision,
     IterationDecision,
@@ -45,10 +45,10 @@ from strands_costguard.core.decisions import (
     ToolDecision,
 )
 from strands_costguard.core.usage import IterationUsage, ModelUsage, ToolUsage
-from strands_costguard.policies.budget import BudgetSpec, BudgetScope
+from strands_costguard.policies.budget import BudgetScope, BudgetSpec
 from strands_costguard.policies.routing import RoutingPolicy, StageConfig
-from strands_costguard.policies.store import PolicyStore, FilePolicySource
-from strands_costguard.pricing.table import PricingTable, ModelPricing
+from strands_costguard.policies.store import FilePolicySource, PolicyStore
+from strands_costguard.pricing.table import ModelPricing, PricingTable
 from strands_costguard.routing.router import ModelRouter
 
 __version__ = "0.1.0"
@@ -82,7 +82,8 @@ __all__ = [
 
 # Optional persistence exports (requires valkey extra)
 try:
-    from strands_costguard.persistence import ValkeyBudgetStore
+    from strands_costguard.persistence import ValkeyBudgetStore  # noqa: F401
+
     __all__.append("ValkeyBudgetStore")
 except ImportError:
     pass  # valkey not installed

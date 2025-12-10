@@ -1,8 +1,8 @@
 """Configuration classes for Cost Guard."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Optional, Protocol
+from typing import TYPE_CHECKING, Optional, Protocol
 
 if TYPE_CHECKING:
     from strands_costguard.persistence.valkey_store import ValkeyBudgetStore

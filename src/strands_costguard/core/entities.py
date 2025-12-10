@@ -1,9 +1,8 @@
 """Core entity identifiers for cost tracking and attribution."""
 
-from dataclasses import dataclass, field
-from typing import Optional
-from datetime import datetime
 import uuid
+from dataclasses import dataclass, field
+from datetime import datetime
 
 
 @dataclass(frozen=True)
@@ -23,8 +22,8 @@ class RunContext:
         tenant_id: str,
         strand_id: str,
         workflow_id: str,
-        run_id: Optional[str] = None,
-        metadata: Optional[dict[str, str]] = None,
+        run_id: str | None = None,
+        metadata: dict[str, str] | None = None,
     ) -> "RunContext":
         """Create a new run context, generating a run_id if not provided."""
         return cls(
@@ -61,9 +60,11 @@ class RunState:
     model_costs: dict[str, float] = field(default_factory=dict)
     tool_costs: dict[str, float] = field(default_factory=dict)
     status: str = "running"
-    ended_at: Optional[datetime] = None
+    ended_at: datetime | None = None
 
-    def add_model_cost(self, model_name: str, cost: float, input_tokens: int, output_tokens: int) -> None:
+    def add_model_cost(
+        self, model_name: str, cost: float, input_tokens: int, output_tokens: int
+    ) -> None:
         """Record cost from a model call."""
         self.total_cost += cost
         self.total_input_tokens += input_tokens

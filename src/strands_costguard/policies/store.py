@@ -4,10 +4,10 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional
+
 import yaml
 
-from strands_costguard.policies.budget import BudgetSpec, BudgetScope
+from strands_costguard.policies.budget import BudgetScope, BudgetSpec
 from strands_costguard.policies.routing import RoutingPolicy
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ class FilePolicySource:
         if not file_path.exists():
             logger.warning(f"Policy file not found: {file_path}")
             return {}
-        with open(file_path, "r") as f:
+        with open(file_path) as f:
             return yaml.safe_load(f) or {}
 
     def load_budgets(self) -> list[dict]:
@@ -107,8 +107,8 @@ class PolicyStore:
     _budgets: list[BudgetSpec] = field(default_factory=list)
     _routing_policies: list[RoutingPolicy] = field(default_factory=list)
     _pricing: dict = field(default_factory=dict)
-    _last_refresh: Optional[datetime] = None
-    _snapshot: Optional[dict] = None  # Last known good config for fail-open
+    _last_refresh: datetime | None = None
+    _snapshot: dict | None = None  # Last known good config for fail-open
 
     def __post_init__(self) -> None:
         """Initialize by loading policies."""
@@ -176,8 +176,8 @@ class PolicyStore:
         tenant_id: str,
         strand_id: str,
         workflow_id: str,
-        scope: Optional[BudgetScope] = None,
-    ) -> Optional[BudgetSpec]:
+        scope: BudgetScope | None = None,
+    ) -> BudgetSpec | None:
         """
         Get the most specific (highest priority) budget for a context.
 
@@ -193,7 +193,7 @@ class PolicyStore:
         tenant_id: str,
         strand_id: str,
         workflow_id: str,
-    ) -> Optional[RoutingPolicy]:
+    ) -> RoutingPolicy | None:
         """Get the most specific routing policy for a context."""
         self._maybe_refresh()
         for policy in self._routing_policies:

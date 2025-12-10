@@ -16,7 +16,6 @@ import os
 import uuid
 
 import pytest
-
 from strands import Agent
 from strands.models.openai import OpenAIModel
 

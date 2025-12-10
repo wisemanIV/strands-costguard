@@ -3,7 +3,7 @@
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any, Callable, Optional, Protocol, TypeVar
+from typing import Any, Protocol, TypeVar
 
 from strands_costguard.core.usage import ModelUsage
 
@@ -19,7 +19,7 @@ class ModelClient(Protocol):
         self,
         messages: list[dict[str, Any]],
         model: str,
-        max_tokens: Optional[int] = None,
+        max_tokens: int | None = None,
         **kwargs: Any,
     ) -> dict[str, Any]:
         """Make a model call and return the response."""
@@ -79,7 +79,7 @@ class ModelRouter:
         run_id: str,
         stage: str,
         messages: list[dict[str, Any]],
-        requested_model: Optional[str] = None,
+        requested_model: str | None = None,
     ) -> "ModelCallContext":
         """
         Prepare for a model call by consulting Cost Guard.
@@ -130,7 +130,7 @@ class ModelRouter:
         self,
         run_id: str,
         response: dict[str, Any],
-        model_name: Optional[str] = None,
+        model_name: str | None = None,
     ) -> ModelUsage:
         """
         Record usage after a model call completes.
@@ -186,7 +186,7 @@ class ModelRouter:
         stage: str,
         messages: list[dict[str, Any]],
         client: ModelClient,
-        requested_model: Optional[str] = None,
+        requested_model: str | None = None,
         **kwargs: Any,
     ) -> tuple[dict[str, Any], ModelUsage]:
         """
@@ -268,10 +268,10 @@ class ModelCallContext:
     stage: str
     requested_model: str
     effective_model: str
-    max_tokens: Optional[int]
+    max_tokens: int | None
     allowed: bool
     was_downgraded: bool
-    reason: Optional[str]
+    reason: str | None
     warnings: list[str]
     prompt_tokens_estimate: int
 

@@ -22,7 +22,7 @@ import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import valkey
@@ -93,7 +93,7 @@ class ValkeyBudgetStore:
         """Create full Redis key from scope key."""
         return f"{self._key_prefix}{scope_key}"
 
-    def get(self, scope_key: str) -> Optional[BudgetStateData]:
+    def get(self, scope_key: str) -> BudgetStateData | None:
         """Get budget state for a scope.
 
         Args:
@@ -112,7 +112,7 @@ class ValkeyBudgetStore:
         self,
         scope_key: str,
         state: BudgetStateData,
-        expire_at: Optional[datetime] = None,
+        expire_at: datetime | None = None,
     ) -> None:
         """Store budget state.
 
@@ -185,9 +185,9 @@ class ValkeyBudgetStore:
         cost: float,
         input_tokens: int = 0,
         output_tokens: int = 0,
-        model_name: Optional[str] = None,
-        tool_name: Optional[str] = None,
-    ) -> Optional[BudgetStateData]:
+        model_name: str | None = None,
+        tool_name: str | None = None,
+    ) -> BudgetStateData | None:
         """Atomically increment cost counters.
 
         Uses Valkey WATCH/MULTI/EXEC for optimistic locking.
@@ -220,13 +220,9 @@ class ValkeyBudgetStore:
                 state.total_output_tokens += output_tokens
 
                 if model_name:
-                    state.model_costs[model_name] = (
-                        state.model_costs.get(model_name, 0.0) + cost
-                    )
+                    state.model_costs[model_name] = state.model_costs.get(model_name, 0.0) + cost
                 if tool_name:
-                    state.tool_costs[tool_name] = (
-                        state.tool_costs.get(tool_name, 0.0) + cost
-                    )
+                    state.tool_costs[tool_name] = state.tool_costs.get(tool_name, 0.0) + cost
                     state.total_tool_calls += 1
 
                 pipe = self._client.pipeline(True)
@@ -242,7 +238,7 @@ class ValkeyBudgetStore:
         logger.warning(f"Failed to increment cost for {scope_key} after retries")
         return None
 
-    def increment_run_count(self, scope_key: str, run_id: str) -> Optional[int]:
+    def increment_run_count(self, scope_key: str, run_id: str) -> int | None:
         """Atomically increment run count and track concurrent run.
 
         Args:
@@ -277,7 +273,7 @@ class ValkeyBudgetStore:
 
         return None
 
-    def remove_concurrent_run(self, scope_key: str, run_id: str) -> Optional[int]:
+    def remove_concurrent_run(self, scope_key: str, run_id: str) -> int | None:
         """Remove a run from concurrent tracking.
 
         Args:

@@ -1,19 +1,14 @@
 """Tests for OpenTelemetry metrics emission."""
 
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
+from strands_costguard.core.entities import RunContext, RunState
+from strands_costguard.core.usage import IterationUsage, ModelUsage, ToolUsage
 from strands_costguard.metrics.otel import (
     MetricsEmitter,
-    METRIC_COST_TOTAL,
-    METRIC_COST_MODEL,
-    METRIC_TOKENS_INPUT,
-    METRIC_TOKENS_OUTPUT,
-    METRIC_AGENT_RUNS,
-    METRIC_COST_DOWNGRADE_EVENTS,
 )
-from strands_costguard.core.entities import RunContext, RunState
-from strands_costguard.core.usage import ModelUsage, ToolUsage, IterationUsage
 
 
 @pytest.fixture
@@ -51,7 +46,7 @@ class TestMetricsEmitter:
         """Should create metric instruments on initialization."""
         mock_get_meter.return_value = mock_meter
 
-        emitter = MetricsEmitter()
+        _emitter = MetricsEmitter()
 
         mock_get_meter.assert_called_once_with(name="strand-cost-guard", version="0.1.0")
         assert mock_meter.create_counter.call_count >= 5  # Multiple counters created

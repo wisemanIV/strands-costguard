@@ -1,14 +1,15 @@
 """Tests for Valkey/Redis budget state persistence."""
 
 import json
-import pytest
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
+
+import pytest
 
 from strands_costguard.persistence.valkey_store import (
+    KEY_PREFIX,
     BudgetStateData,
     ValkeyBudgetStore,
-    KEY_PREFIX,
 )
 
 
@@ -392,8 +393,8 @@ class TestValkeyBudgetStore:
     def test_list_budgets(self, store, mock_client):
         """Should list budget scope keys matching pattern."""
         mock_client.keys.return_value = [
-            f"{KEY_PREFIX}tenant:prod:budget-1".encode("utf-8"),
-            f"{KEY_PREFIX}tenant:prod:budget-2".encode("utf-8"),
+            f"{KEY_PREFIX}tenant:prod:budget-1".encode(),
+            f"{KEY_PREFIX}tenant:prod:budget-2".encode(),
         ]
 
         result = store.list_budgets("tenant:prod:*")

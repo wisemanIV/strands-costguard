@@ -11,10 +11,10 @@ from strands_costguard import (
     CostGuard,
     CostGuardConfig,
     FilePolicySource,
+    IterationUsage,
     ModelRouter,
     ModelUsage,
     ToolUsage,
-    IterationUsage,
 )
 
 
@@ -28,6 +28,7 @@ def main():
     # Cost Guard will use the global MeterProvider from StrandsTelemetry
     # Use path relative to this script's location
     import os
+
     script_dir = os.path.dirname(os.path.abspath(__file__))
     policies_path = os.path.join(script_dir, "policies")
 
@@ -41,7 +42,7 @@ def main():
     guard = CostGuard(config=config)
 
     # Optional: Create a model router for easier integration
-    router = ModelRouter(cost_guard=guard)
+    _router = ModelRouter(cost_guard=guard)
 
     # Simulate an agent run
     tenant_id = "prod-tenant-001"
@@ -130,7 +131,7 @@ def main():
     guard.on_run_end(run_id=run_id, status="completed")
 
     # Get final cost
-    print(f"\n--- Run Complete ---")
+    print("\n--- Run Complete ---")
     print(f"Total cost: ${guard.get_run_cost(run_id) or 0:.4f}")
 
     # Get budget summary

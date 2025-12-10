@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
 
 
 class BudgetScope(str, Enum):
@@ -73,10 +72,10 @@ class BudgetMatch:
 class BudgetConstraints:
     """Per-run constraints within a budget."""
 
-    max_iterations_per_run: Optional[int] = None
-    max_tool_calls_per_run: Optional[int] = None
-    max_model_tokens_per_run: Optional[int] = None
-    max_cost_per_run: Optional[float] = None
+    max_iterations_per_run: int | None = None
+    max_tool_calls_per_run: int | None = None
+    max_model_tokens_per_run: int | None = None
+    max_cost_per_run: float | None = None
 
 
 @dataclass
@@ -87,13 +86,13 @@ class BudgetSpec:
     scope: BudgetScope
     match: BudgetMatch
     period: BudgetPeriod = BudgetPeriod.MONTHLY
-    max_cost: Optional[float] = None
+    max_cost: float | None = None
     soft_thresholds: list[float] = field(default_factory=lambda: [0.7, 0.9, 1.0])
     hard_limit: bool = True
     on_soft_threshold_exceeded: ThresholdAction = ThresholdAction.LOG_ONLY
     on_hard_limit_exceeded: HardLimitAction = HardLimitAction.REJECT_NEW_RUNS
-    max_runs_per_period: Optional[int] = None
-    max_concurrent_runs: Optional[int] = None
+    max_runs_per_period: int | None = None
+    max_concurrent_runs: int | None = None
     constraints: BudgetConstraints = field(default_factory=BudgetConstraints)
     enabled: bool = True
 
@@ -111,7 +110,7 @@ class BudgetSpec:
         """Check if this budget applies to the given context."""
         return self.enabled and self.match.matches(tenant_id, strand_id, workflow_id)
 
-    def get_current_threshold_action(self, utilization: float) -> Optional[ThresholdAction]:
+    def get_current_threshold_action(self, utilization: float) -> ThresholdAction | None:
         """Get the action for the current budget utilization level."""
         exceeded_thresholds = [t for t in self.soft_thresholds if utilization >= t]
         if exceeded_thresholds:

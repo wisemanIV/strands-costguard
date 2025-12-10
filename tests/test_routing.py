@@ -1,14 +1,11 @@
 """Tests for routing policies and model router."""
 
-import pytest
-
 from strands_costguard.policies.routing import (
+    DowngradeTrigger,
     RoutingPolicy,
     StageConfig,
-    DowngradeTrigger,
-    ModelStage,
 )
-from strands_costguard.routing.router import ModelRouter, RouterConfig, ModelCallContext
+from strands_costguard.routing.router import ModelCallContext
 
 
 class TestDowngradeTrigger:
@@ -129,9 +126,7 @@ class TestStageConfig:
             trigger_downgrade_on=DowngradeTrigger(soft_threshold_exceeded=True),
         )
 
-        model, downgraded, reason = config.get_effective_model(
-            soft_threshold_exceeded=True
-        )
+        model, downgraded, reason = config.get_effective_model(soft_threshold_exceeded=True)
         assert model == "gpt-4o-mini"
         assert downgraded is True
         assert reason != ""
@@ -239,7 +234,9 @@ class TestRoutingPolicy:
             RoutingPolicy(id="tenant", match={"tenant_id": "t1"}),
             RoutingPolicy(id="strand", match={"strand_id": "s1"}),
             RoutingPolicy(id="workflow", match={"workflow_id": "w1"}),
-            RoutingPolicy(id="full", match={"tenant_id": "t1", "strand_id": "s1", "workflow_id": "w1"}),
+            RoutingPolicy(
+                id="full", match={"tenant_id": "t1", "strand_id": "s1", "workflow_id": "w1"}
+            ),
         ]
 
         scores = [p.specificity_score() for p in policies]

@@ -1,15 +1,15 @@
 """Tests for the adaptive model router."""
 
-import pytest
-from unittest.mock import MagicMock, patch
 import time
+from unittest.mock import MagicMock
+
+import pytest
 
 from strands_costguard.routing.router import (
+    ModelCallContext,
     ModelRouter,
     RouterConfig,
-    ModelCallContext,
 )
-from strands_costguard.core.usage import ModelUsage
 
 
 class MockCostGuard:
@@ -48,12 +48,14 @@ class MockModelClient:
         self.calls = []
 
     def call(self, messages, model, max_tokens=None, **kwargs):
-        self.calls.append({
-            "messages": messages,
-            "model": model,
-            "max_tokens": max_tokens,
-            **kwargs,
-        })
+        self.calls.append(
+            {
+                "messages": messages,
+                "model": model,
+                "max_tokens": max_tokens,
+                **kwargs,
+            }
+        )
         return self.response
 
 

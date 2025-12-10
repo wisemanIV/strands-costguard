@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
 
 
 class DecisionAction(str, Enum):
@@ -20,11 +19,11 @@ class DecisionAction(str, Enum):
 class ActionOverrides:
     """Overrides that can be applied to modify runtime behavior."""
 
-    model_name: Optional[str] = None
-    max_tokens_remaining: Optional[int] = None
+    model_name: str | None = None
+    max_tokens_remaining: int | None = None
     force_terminate_run: bool = False
     skip_tool_call: bool = False
-    fallback_response: Optional[str] = None
+    fallback_response: str | None = None
 
 
 @dataclass
@@ -32,18 +31,18 @@ class AdmissionDecision:
     """Decision for whether to admit a new run."""
 
     allowed: bool
-    reason: Optional[str] = None
+    reason: str | None = None
     action: DecisionAction = DecisionAction.ALLOW
-    remaining_budget: Optional[float] = None
-    budget_utilization: Optional[float] = None
+    remaining_budget: float | None = None
+    budget_utilization: float | None = None
     warnings: list[str] = field(default_factory=list)
 
     @classmethod
     def admit(
         cls,
-        remaining_budget: Optional[float] = None,
-        budget_utilization: Optional[float] = None,
-        warnings: Optional[list[str]] = None,
+        remaining_budget: float | None = None,
+        budget_utilization: float | None = None,
+        warnings: list[str] | None = None,
     ) -> "AdmissionDecision":
         """Create an admission decision that allows the run."""
         return cls(
@@ -69,19 +68,19 @@ class IterationDecision:
     """Decision for whether to proceed with an iteration."""
 
     allowed: bool
-    reason: Optional[str] = None
+    reason: str | None = None
     action: DecisionAction = DecisionAction.ALLOW
     action_overrides: ActionOverrides = field(default_factory=ActionOverrides)
-    remaining_iterations: Optional[int] = None
-    remaining_budget: Optional[float] = None
+    remaining_iterations: int | None = None
+    remaining_budget: float | None = None
     warnings: list[str] = field(default_factory=list)
 
     @classmethod
     def proceed(
         cls,
-        remaining_iterations: Optional[int] = None,
-        remaining_budget: Optional[float] = None,
-        warnings: Optional[list[str]] = None,
+        remaining_iterations: int | None = None,
+        remaining_budget: float | None = None,
+        warnings: list[str] | None = None,
     ) -> "IterationDecision":
         """Create a decision to proceed with the iteration."""
         return cls(
@@ -108,13 +107,13 @@ class ModelDecision:
     """Decision for a model call, including potential model routing."""
 
     allowed: bool
-    reason: Optional[str] = None
+    reason: str | None = None
     action: DecisionAction = DecisionAction.ALLOW
     action_overrides: ActionOverrides = field(default_factory=ActionOverrides)
-    effective_model: Optional[str] = None
-    max_tokens: Optional[int] = None
-    remaining_tokens: Optional[int] = None
-    remaining_budget: Optional[float] = None
+    effective_model: str | None = None
+    max_tokens: int | None = None
+    remaining_tokens: int | None = None
+    remaining_budget: float | None = None
     was_downgraded: bool = False
     warnings: list[str] = field(default_factory=list)
 
@@ -122,9 +121,9 @@ class ModelDecision:
     def allow(
         cls,
         effective_model: str,
-        max_tokens: Optional[int] = None,
-        remaining_budget: Optional[float] = None,
-        warnings: Optional[list[str]] = None,
+        max_tokens: int | None = None,
+        remaining_budget: float | None = None,
+        warnings: list[str] | None = None,
     ) -> "ModelDecision":
         """Create a decision to allow the model call."""
         return cls(
@@ -142,7 +141,7 @@ class ModelDecision:
         original_model: str,
         fallback_model: str,
         reason: str,
-        max_tokens: Optional[int] = None,
+        max_tokens: int | None = None,
     ) -> "ModelDecision":
         """Create a decision to downgrade to a fallback model."""
         return cls(
@@ -171,19 +170,19 @@ class ToolDecision:
     """Decision for a tool call."""
 
     allowed: bool
-    reason: Optional[str] = None
+    reason: str | None = None
     action: DecisionAction = DecisionAction.ALLOW
     action_overrides: ActionOverrides = field(default_factory=ActionOverrides)
-    remaining_tool_calls: Optional[int] = None
-    remaining_budget: Optional[float] = None
+    remaining_tool_calls: int | None = None
+    remaining_budget: float | None = None
     warnings: list[str] = field(default_factory=list)
 
     @classmethod
     def allow(
         cls,
-        remaining_tool_calls: Optional[int] = None,
-        remaining_budget: Optional[float] = None,
-        warnings: Optional[list[str]] = None,
+        remaining_tool_calls: int | None = None,
+        remaining_budget: float | None = None,
+        warnings: list[str] | None = None,
     ) -> "ToolDecision":
         """Create a decision to allow the tool call."""
         return cls(

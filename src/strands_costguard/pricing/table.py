@@ -2,7 +2,6 @@
 
 import logging
 from dataclasses import dataclass, field
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -45,8 +44,8 @@ class ModelPricing:
     input_per_1k: float
     output_per_1k: float
     currency: str = "USD"
-    cached_input_per_1k: Optional[float] = None  # Discounted rate for cached tokens
-    reasoning_per_1k: Optional[float] = None  # Rate for reasoning tokens (o1, etc.)
+    cached_input_per_1k: float | None = None  # Discounted rate for cached tokens
+    reasoning_per_1k: float | None = None  # Rate for reasoning tokens (o1, etc.)
 
     def calculate_cost(
         self,
@@ -148,9 +147,7 @@ class PricingTable:
                 return self.models[known_model]
 
         # Fallback pricing
-        logger.warning(
-            f"No pricing found for model '{model_name}', using fallback pricing"
-        )
+        logger.warning(f"No pricing found for model '{model_name}', using fallback pricing")
         return ModelPricing(
             model_name=model_name,
             input_per_1k=self.fallback_input_per_1k,

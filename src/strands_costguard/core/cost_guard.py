@@ -2,13 +2,12 @@
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
 
 from strands_costguard.core.budget_tracker import BudgetTracker
 from strands_costguard.core.config import CostGuardConfig
 from strands_costguard.core.decisions import (
     AdmissionDecision,
-    DecisionAction,
     IterationDecision,
     ModelDecision,
     ToolDecision,
@@ -39,7 +38,7 @@ class CostGuard:
     _policy_store: PolicyStore = field(init=False)
     _pricing_table: PricingTable = field(init=False)
     _budget_tracker: BudgetTracker = field(init=False)
-    _metrics_emitter: Optional[MetricsEmitter] = field(init=False, default=None)
+    _metrics_emitter: MetricsEmitter | None = field(init=False, default=None)
     _run_budgets: dict[str, list[BudgetSpec]] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -72,7 +71,7 @@ class CostGuard:
         strand_id: str,
         workflow_id: str,
         run_id: str,
-        metadata: Optional[dict[str, str]] = None,
+        metadata: dict[str, str] | None = None,
     ) -> AdmissionDecision:
         """
         Called when a new run starts.
@@ -89,9 +88,7 @@ class CostGuard:
         )
 
         # Get applicable budgets
-        budgets = self._policy_store.get_budgets_for_context(
-            tenant_id, strand_id, workflow_id
-        )
+        budgets = self._policy_store.get_budgets_for_context(tenant_id, strand_id, workflow_id)
         self._run_budgets[run_id] = budgets
 
         if not self.config.enable_budget_enforcement:
@@ -124,16 +121,16 @@ class CostGuard:
                 budget, tenant_id, strand_id, workflow_id
             )
             if budget.max_cost:
-                if remaining is None or (state.remaining_budget and state.remaining_budget < remaining):
+                if remaining is None or (
+                    state.remaining_budget and state.remaining_budget < remaining
+                ):
                     remaining = state.remaining_budget
                     utilization = state.utilization
 
             # Check soft thresholds for warnings
             threshold_action = budget.get_current_threshold_action(state.utilization)
             if threshold_action and threshold_action != ThresholdAction.LOG_ONLY:
-                warnings.append(
-                    f"Budget {budget.id} at {state.utilization:.1%} utilization"
-                )
+                warnings.append(f"Budget {budget.id} at {state.utilization:.1%} utilization")
 
         self._emit_run_start(context)
 
@@ -162,7 +159,7 @@ class CostGuard:
         self,
         run_id: str,
         iteration_idx: int,
-        context: Optional[dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> IterationDecision:
         """
         Called before each agent loop iteration.
@@ -217,7 +214,10 @@ class CostGuard:
         # Calculate remaining iterations
         remaining = None
         for budget in budgets:
-            max_iter = budget.constraints.max_iterations_per_run or self.config.default_max_iterations_per_run
+            max_iter = (
+                budget.constraints.max_iterations_per_run
+                or self.config.default_max_iterations_per_run
+            )
             budget_remaining = max_iter - iteration_idx
             if remaining is None or budget_remaining < remaining:
                 remaining = budget_remaining
@@ -317,7 +317,9 @@ class CostGuard:
         for budget in budgets:
             max_run_tokens = budget.constraints.max_model_tokens_per_run
             if max_run_tokens:
-                remaining_tokens = max_run_tokens - run_state.total_input_tokens - run_state.total_output_tokens
+                remaining_tokens = (
+                    max_run_tokens - run_state.total_input_tokens - run_state.total_output_tokens
+                )
                 if remaining_tokens <= 0:
                     return ModelDecision.reject(f"Token limit ({max_run_tokens}) exceeded for run")
                 if max_tokens is None or remaining_tokens < max_tokens:
@@ -424,7 +426,10 @@ class CostGuard:
         # Calculate remaining tool calls
         remaining = None
         for budget in budgets:
-            max_calls = budget.constraints.max_tool_calls_per_run or self.config.default_max_tool_calls_per_run
+            max_calls = (
+                budget.constraints.max_tool_calls_per_run
+                or self.config.default_max_tool_calls_per_run
+            )
             budget_remaining = max_calls - run_state.total_tool_calls
             if remaining is None or budget_remaining < remaining:
                 remaining = budget_remaining
@@ -470,7 +475,7 @@ class CostGuard:
     # Query Methods
     # =========================================================================
 
-    def get_run_cost(self, run_id: str) -> Optional[float]:
+    def get_run_cost(self, run_id: str) -> float | None:
         """Get the current total cost for a run."""
         run_state = self._budget_tracker.get_run_state(run_id)
         return run_state.total_cost if run_state else None
@@ -482,12 +487,8 @@ class CostGuard:
         workflow_id: str,
     ) -> dict[str, dict]:
         """Get a summary of budget usage for a context."""
-        budgets = self._policy_store.get_budgets_for_context(
-            tenant_id, strand_id, workflow_id
-        )
-        return self._budget_tracker.get_budget_summary(
-            tenant_id, strand_id, workflow_id, budgets
-        )
+        budgets = self._policy_store.get_budgets_for_context(tenant_id, strand_id, workflow_id)
+        return self._budget_tracker.get_budget_summary(tenant_id, strand_id, workflow_id, budgets)
 
     # =========================================================================
     # Metrics Emission (Internal)

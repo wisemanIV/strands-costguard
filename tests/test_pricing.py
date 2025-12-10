@@ -3,10 +3,10 @@
 import pytest
 
 from strands_costguard.pricing.table import (
-    PricingTable,
-    ModelPricing,
-    ToolPricing,
     DEFAULT_MODEL_PRICING,
+    ModelPricing,
+    PricingTable,
+    ToolPricing,
 )
 
 

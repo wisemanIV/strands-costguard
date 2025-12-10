@@ -1,12 +1,8 @@
 """Tests for the main CostGuard runtime."""
 
-import pytest
-from unittest.mock import MagicMock
-
-from strands_costguard.core.cost_guard import CostGuard
 from strands_costguard.core.config import CostGuardConfig
-from strands_costguard.core.usage import ModelUsage, ToolUsage, IterationUsage
-from strands_costguard.policies.budget import BudgetSpec, BudgetScope, BudgetMatch, ThresholdAction
+from strands_costguard.core.cost_guard import CostGuard
+from strands_costguard.core.usage import ModelUsage, ToolUsage
 
 
 class MockPolicySource:

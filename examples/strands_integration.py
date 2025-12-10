@@ -5,9 +5,9 @@ This example shows how Cost Guard hooks would be called from within
 a Strands agent loop, demonstrating the full lifecycle integration.
 """
 
-from dataclasses import dataclass
-from typing import Any, Optional
 import uuid
+from dataclasses import dataclass
+from typing import Any
 
 from strands.telemetry.config import StrandsTelemetry
 
@@ -15,16 +15,17 @@ from strands_costguard import (
     CostGuard,
     CostGuardConfig,
     FilePolicySource,
+    IterationUsage,
     ModelRouter,
     ModelUsage,
     ToolUsage,
-    IterationUsage,
 )
 
 
 @dataclass
 class AgentConfig:
     """Configuration for a Strands agent."""
+
     tenant_id: str
     strand_id: str
     workflow_id: str
@@ -42,14 +43,14 @@ class CostGuardedAgent:
         self,
         agent_config: AgentConfig,
         cost_guard: CostGuard,
-        model_router: Optional[ModelRouter] = None,
+        model_router: ModelRouter | None = None,
     ):
         self.config = agent_config
         self.cost_guard = cost_guard
         self.model_router = model_router or ModelRouter(cost_guard=cost_guard)
-        self.run_id: Optional[str] = None
+        self.run_id: str | None = None
 
-    def run(self, task: str, metadata: Optional[dict] = None) -> dict[str, Any]:
+    def run(self, task: str, metadata: dict | None = None) -> dict[str, Any]:
         """
         Execute an agent run with Cost Guard enforcement.
 
@@ -176,7 +177,7 @@ class CostGuardedAgent:
         self,
         messages: list[dict],
         stage: str,
-    ) -> Optional[ModelUsage]:
+    ) -> ModelUsage | None:
         """Make a model call through Cost Guard."""
         # === Before Model Call ===
         decision = self.cost_guard.before_model_call(
@@ -211,7 +212,7 @@ class CostGuardedAgent:
 
         return usage
 
-    def _call_tool(self, tool_name: str, args: dict) -> Optional[ToolUsage]:
+    def _call_tool(self, tool_name: str, args: dict) -> ToolUsage | None:
         """Make a tool call through Cost Guard."""
         # === Before Tool Call ===
         decision = self.cost_guard.before_tool_call(
@@ -248,7 +249,7 @@ class CostGuardedAgent:
         total = sum(len(str(m.get("content", ""))) for m in messages)
         return total // 4  # Rough estimate
 
-    def _extract_tool_calls(self, usage: Optional[ModelUsage]) -> list[dict]:
+    def _extract_tool_calls(self, usage: ModelUsage | None) -> list[dict]:
         """Extract tool calls from model response (simulated)."""
         # In real implementation, parse from model response
         # For demo, return empty on first iteration

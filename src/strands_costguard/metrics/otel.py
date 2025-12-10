@@ -18,7 +18,6 @@ Example:
 
 import logging
 from dataclasses import dataclass, field
-from typing import Optional
 
 from opentelemetry import metrics
 
@@ -56,20 +55,20 @@ class MetricsEmitter:
     """
 
     include_run_id: bool = False
-    _meter: Optional[metrics.Meter] = field(init=False, default=None)
+    _meter: metrics.Meter | None = field(init=False, default=None)
 
     # Counters
-    _cost_total: Optional[metrics.Counter] = field(init=False, default=None)
-    _cost_model: Optional[metrics.Counter] = field(init=False, default=None)
-    _cost_tool: Optional[metrics.Counter] = field(init=False, default=None)
-    _tokens_input: Optional[metrics.Counter] = field(init=False, default=None)
-    _tokens_output: Optional[metrics.Counter] = field(init=False, default=None)
-    _iterations: Optional[metrics.Counter] = field(init=False, default=None)
-    _tool_calls: Optional[metrics.Counter] = field(init=False, default=None)
-    _runs: Optional[metrics.Counter] = field(init=False, default=None)
-    _downgrades: Optional[metrics.Counter] = field(init=False, default=None)
-    _rejections: Optional[metrics.Counter] = field(init=False, default=None)
-    _halts: Optional[metrics.Counter] = field(init=False, default=None)
+    _cost_total: metrics.Counter | None = field(init=False, default=None)
+    _cost_model: metrics.Counter | None = field(init=False, default=None)
+    _cost_tool: metrics.Counter | None = field(init=False, default=None)
+    _tokens_input: metrics.Counter | None = field(init=False, default=None)
+    _tokens_output: metrics.Counter | None = field(init=False, default=None)
+    _iterations: metrics.Counter | None = field(init=False, default=None)
+    _tool_calls: metrics.Counter | None = field(init=False, default=None)
+    _runs: metrics.Counter | None = field(init=False, default=None)
+    _downgrades: metrics.Counter | None = field(init=False, default=None)
+    _rejections: metrics.Counter | None = field(init=False, default=None)
+    _halts: metrics.Counter | None = field(init=False, default=None)
 
     def __post_init__(self) -> None:
         """Initialize meter and instruments from global MeterProvider."""

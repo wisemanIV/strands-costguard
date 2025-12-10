@@ -1,7 +1,6 @@
 """Routing policy definitions for adaptive model selection."""
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 class ModelStage:
@@ -18,16 +17,16 @@ class DowngradeTrigger:
     """Conditions that trigger model downgrade."""
 
     soft_threshold_exceeded: bool = False
-    remaining_budget_below: Optional[float] = None
-    iteration_count_above: Optional[int] = None
-    latency_above_ms: Optional[float] = None
+    remaining_budget_below: float | None = None
+    iteration_count_above: int | None = None
+    latency_above_ms: float | None = None
 
     def should_downgrade(
         self,
         soft_threshold_exceeded: bool = False,
-        remaining_budget: Optional[float] = None,
+        remaining_budget: float | None = None,
         iteration_count: int = 0,
-        avg_latency_ms: Optional[float] = None,
+        avg_latency_ms: float | None = None,
     ) -> tuple[bool, str]:
         """Check if downgrade should be triggered, returning (should_downgrade, reason)."""
         if self.soft_threshold_exceeded and soft_threshold_exceeded:
@@ -35,15 +34,24 @@ class DowngradeTrigger:
 
         if self.remaining_budget_below is not None and remaining_budget is not None:
             if remaining_budget < self.remaining_budget_below:
-                return True, f"remaining budget ({remaining_budget:.2f}) below threshold ({self.remaining_budget_below:.2f})"
+                return (
+                    True,
+                    f"remaining budget ({remaining_budget:.2f}) below threshold ({self.remaining_budget_below:.2f})",
+                )
 
         if self.iteration_count_above is not None:
             if iteration_count > self.iteration_count_above:
-                return True, f"iteration count ({iteration_count}) above threshold ({self.iteration_count_above})"
+                return (
+                    True,
+                    f"iteration count ({iteration_count}) above threshold ({self.iteration_count_above})",
+                )
 
         if self.latency_above_ms is not None and avg_latency_ms is not None:
             if avg_latency_ms > self.latency_above_ms:
-                return True, f"average latency ({avg_latency_ms:.0f}ms) above threshold ({self.latency_above_ms:.0f}ms)"
+                return (
+                    True,
+                    f"average latency ({avg_latency_ms:.0f}ms) above threshold ({self.latency_above_ms:.0f}ms)",
+                )
 
         return False, ""
 
@@ -64,17 +72,17 @@ class StageConfig:
 
     stage: str
     default_model: str
-    fallback_model: Optional[str] = None
-    max_tokens: Optional[int] = None
-    temperature: Optional[float] = None
+    fallback_model: str | None = None
+    max_tokens: int | None = None
+    temperature: float | None = None
     trigger_downgrade_on: DowngradeTrigger = field(default_factory=DowngradeTrigger)
 
     def get_effective_model(
         self,
         soft_threshold_exceeded: bool = False,
-        remaining_budget: Optional[float] = None,
+        remaining_budget: float | None = None,
         iteration_count: int = 0,
-        avg_latency_ms: Optional[float] = None,
+        avg_latency_ms: float | None = None,
     ) -> tuple[str, bool, str]:
         """
         Get the effective model to use given current conditions.
@@ -116,7 +124,7 @@ class RoutingPolicy:
     match: dict[str, str] = field(default_factory=dict)
     stages: list[StageConfig] = field(default_factory=list)
     default_model: str = "gpt-4o-mini"
-    default_fallback_model: Optional[str] = None
+    default_fallback_model: str | None = None
     enabled: bool = True
 
     def matches_context(self, tenant_id: str, strand_id: str, workflow_id: str) -> bool:
@@ -137,7 +145,7 @@ class RoutingPolicy:
 
         return True
 
-    def get_stage_config(self, stage: str) -> Optional[StageConfig]:
+    def get_stage_config(self, stage: str) -> StageConfig | None:
         """Get configuration for a specific stage."""
         for stage_config in self.stages:
             if stage_config.stage == stage:
@@ -148,10 +156,10 @@ class RoutingPolicy:
         self,
         stage: str,
         soft_threshold_exceeded: bool = False,
-        remaining_budget: Optional[float] = None,
+        remaining_budget: float | None = None,
         iteration_count: int = 0,
-        avg_latency_ms: Optional[float] = None,
-    ) -> tuple[str, Optional[int], bool, str]:
+        avg_latency_ms: float | None = None,
+    ) -> tuple[str, int | None, bool, str]:
         """
         Get the effective model for a stage given current conditions.
 

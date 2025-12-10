@@ -1,7 +1,6 @@
 """Usage data structures for tracking resource consumption."""
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass
@@ -13,7 +12,7 @@ class ModelUsage:
     completion_tokens: int
     total_tokens: int
     cost: float = 0.0
-    latency_ms: Optional[float] = None
+    latency_ms: float | None = None
     cached_tokens: int = 0
     reasoning_tokens: int = 0
 
@@ -24,7 +23,7 @@ class ModelUsage:
         prompt_tokens: int,
         completion_tokens: int,
         cost: float = 0.0,
-        latency_ms: Optional[float] = None,
+        latency_ms: float | None = None,
         cached_tokens: int = 0,
         reasoning_tokens: int = 0,
     ) -> "ModelUsage":
@@ -47,11 +46,11 @@ class ToolUsage:
 
     tool_name: str
     cost: float = 0.0
-    latency_ms: Optional[float] = None
+    latency_ms: float | None = None
     input_size_bytes: int = 0
     output_size_bytes: int = 0
     success: bool = True
-    error_type: Optional[str] = None
+    error_type: str | None = None
     metadata: dict[str, str] = field(default_factory=dict)
 
 
